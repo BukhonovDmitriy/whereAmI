@@ -30,8 +30,7 @@ function [var, max_err]=rotateandwatch(options)
         for j = -ang_freq:ang_freq
             ang = ang_amplitude * (double(j) / double(ang_freq));
             mp = Generate(R, ang, N, Kx, Ky, dxy, x0, y0, noise_sigma);
-            rp = Approximate(R, mp);
-            angle_eval = atan2(rp(2,1), rp(1,1));
+            angle_eval = ApproximateAngle(R, mp);
             diffs(i, j + 1001) = abs(angle_eval - ang);
         end
         
@@ -76,6 +75,24 @@ function recovered_points = Approximate(R, moved_points)
     M = approx_M(Q);
 
     recovered_points = M^-1 * (moved_points - [ones(1, N) * x0; ones(1, N) * y0]);
+end
+
+function recovered_angle = ApproximateAngle(R, moved_points)
+    recovered_points = Approximate(R, moved_points);
+    % recovered_angle = atan2(recovered_points(2,1), recovered_points(1,1));
+
+    sz = size(moved_points);
+    N = sz(2);
+    angles = zeros(N);
+
+    for i = 1:N
+        angles(i) = atan2(recovered_points(2,i), recovered_points(1,i)) - (i-1) * 2*pi/N;
+        if angles(i) < -pi
+            angles(i) = angles(i) + 2 * pi;
+        end
+    end
+
+    recovered_angle = sum(angles, "all") / N;
 end
 
 function [x0, y0] = approx_x0y0(V)
