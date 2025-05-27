@@ -44,55 +44,18 @@ function [var, max_err]=rotateandwatch(options)
     max_err = max(diffs, [], "all");
 end
 
+% здесь никаких эллипсов, просто сдвигаем. R для похожести на функцию из
+% rotateandwatch.m
 function recovered_points = Approximate(R, moved_points)
     sz = size(moved_points);
     N = sz(2);
-
-    K = [moved_points(2,1:end).^2;...
-        moved_points(1, 1:end) .* moved_points(2, 1:end);...
-        moved_points(1,1:end);...
-        moved_points(2,1:end);...
-        ones(1,N)]';
-
-    V = (K' * K)^-1 * K' * (-moved_points(1, 1:end)'.^2);
-
-    [x0, y0] = approx_x0y0(V);
-    Q = approx_Q(V, R, x0, y0);
-    M = approx_M(Q);
-
-    recovered_points = M^-1 * (moved_points - [ones(1, N) * x0; ones(1, N) * y0]);
+    
+    offset = sum(moved_points, 2) / N;
+    
+    recovered_points = moved_points - offset .* ones(sz);
 end
 
 function recovered_angle = ApproximateAngle(R, moved_points)
     recovered_points = Approximate(R, moved_points);
     recovered_angle = EvaluateAngle(recovered_points);
-end
-
-function [x0, y0] = approx_x0y0(V)
-    A = V(1);
-    B = V(2);
-    C = V(3);
-    D = V(4);
-
-    x0 = (B*D - 2*A*C) / (4*A-B^2);
-    y0 = (B*C - 2*D) / (4*A-B^2);
-end
-
-function Q = approx_Q(V, R, x0, y0)
-    A = V(1);
-    B = V(2);
-    E = V(5);
-    Q11 = - (R^2) / (E - x0^2 - A*y0^2 - B*x0*y0);
-
-    Q = [Q11 B*Q11/2; B*Q11/2 A*Q11];
-end
-
-function M = approx_M(Q)
-    O = Q^-1;
-    Kx = ((O(1,1)*O(2,2) + (O(1,1)*O(2,2)*(O(1,1)*O(2,2) - O(1,2)^2))^0.5)...
-        / (2*O(2,2)))^0.5;
-    Ky = ((O(1,1)*O(2,2) + (O(1,1)*O(2,2)*(O(1,1)*O(2,2) - O(1,2)^2))^0.5)...
-        / (2*O(1,1)))^0.5;
-    dxy = O(1,2) / (2 * Kx * Ky);
-    M = [Kx 0; 0 Ky] * [1 dxy; dxy 1];
 end
