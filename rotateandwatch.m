@@ -7,7 +7,7 @@ function [var, max_err]=rotateandwatch(options)
         options.Ky  double = 0.9
         options.dxy double = 0.05
         options.zero_offset_var double = 0.1 * pi/180  % 0.1 градусов в секунду * радиан в градусах
-        options.noise_sigma double = 0.03
+        options.noise_var double = 0.03
         options.iters int32 = 1000
         options.ang_freq int32 = 100
     end
@@ -18,7 +18,7 @@ function [var, max_err]=rotateandwatch(options)
     Ky  = options.Ky;
     dxy = options.dxy;
     zero_offset_var = options.zero_offset_var;
-    noise_sigma = options.noise_sigma;
+    noise_var = options.noise_var;
     iters = options.iters;
     ang_freq = options.ang_freq;
 
@@ -27,7 +27,7 @@ function [var, max_err]=rotateandwatch(options)
     for i = 1:iters
         for j = -ang_freq:ang_freq
             ang = ang_amplitude * (double(j) / double(ang_freq));
-            mp = Generate(R, ang, N, Kx, Ky, dxy, zero_offset_var, noise_sigma);
+            mp = Generate(R, ang, N, Kx, Ky, dxy, zero_offset_var, noise_var);
             angle_eval = ApproximateAngle(mp);
             diffs(i, j + 1001) = abs(angle_eval - ang);
         end
