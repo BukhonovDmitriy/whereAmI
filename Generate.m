@@ -1,4 +1,6 @@
-function moved_points = Generate(R, angle_offset, N, Kx, Ky, dxy, x0, y0, noise_sigma)
+function moved_points = Generate(R, angle_offset, N, Kx, Ky, dxy, zero_offset_var, noise_sigma)
+    x0 = normrnd(0, zero_offset_var);
+    y0 = normrnd(0, zero_offset_var);
     M = [Kx 0; 0 Ky] * [1 dxy; dxy 1];
 
     points = R * [

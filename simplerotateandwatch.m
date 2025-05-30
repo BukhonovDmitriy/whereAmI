@@ -1,4 +1,4 @@
-function [var, max_err]=rotateandwatch(options)
+function [var, max_err]=simplerotateandwatch(options)
     arguments
         options.R   double = 1
         options.ang_amplitude double = pi/12
@@ -6,8 +6,7 @@ function [var, max_err]=rotateandwatch(options)
         options.Kx  double = 1.1
         options.Ky  double = 0.9
         options.dxy double = 0.05
-        options.x0  double = 0.1
-        options.y0  double = 0.15
+        options.zero_offset_var double = 0.1 * pi/180  % 0.1 градусов в секунду * радиан в градусах
         options.noise_sigma double = 0.03
         options.iters int32 = 1000
         options.ang_freq int32 = 100
@@ -18,8 +17,7 @@ function [var, max_err]=rotateandwatch(options)
     Kx  = options.Kx;
     Ky  = options.Ky;
     dxy = options.dxy;
-    x0  = options.x0;
-    y0  = options.y0;
+    zero_offset_var = options.zero_offset_var;
     noise_sigma = options.noise_sigma;
     iters = options.iters;
     ang_freq = options.ang_freq;
@@ -29,8 +27,8 @@ function [var, max_err]=rotateandwatch(options)
     for i = 1:iters
         for j = -ang_freq:ang_freq
             ang = ang_amplitude * (double(j) / double(ang_freq));
-            mp = Generate(R, ang, N, Kx, Ky, dxy, x0, y0, noise_sigma);
-            angle_eval = ApproximateAngle(R, mp);
+            mp = Generate(R, ang, N, Kx, Ky, dxy, zero_offset_var, noise_sigma);
+            angle_eval = ApproximateAngle(mp);
             diffs(i, j + 1001) = abs(angle_eval - ang);
         end
         
@@ -46,7 +44,7 @@ end
 
 % здесь никаких эллипсов, просто сдвигаем. R для похожести на функцию из
 % rotateandwatch.m
-function recovered_points = Approximate(R, moved_points)
+function recovered_points = Approximate(moved_points)
     sz = size(moved_points);
     N = sz(2);
     
@@ -55,7 +53,7 @@ function recovered_points = Approximate(R, moved_points)
     recovered_points = moved_points - offset .* ones(sz);
 end
 
-function recovered_angle = ApproximateAngle(R, moved_points)
-    recovered_points = Approximate(R, moved_points);
+function recovered_angle = ApproximateAngle(moved_points)
+    recovered_points = Approximate(moved_points);
     recovered_angle = EvaluateAngle(recovered_points);
 end
